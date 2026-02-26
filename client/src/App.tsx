@@ -3,7 +3,7 @@ import { createAuthedSocket, type ChatMessage, type ChatTyping, type RoomState }
 import { addLocalTracks, createPeerConnection, safeSetRemoteDescription } from './lib/webrtc'
 import { VideoTile } from './components/VideoTile'
 import { ChatPanel } from './components/ChatPanel'
-import { AryaBackgroundHearts, GradientBackdrop, HeartsBurst } from './components/HeartsOverlay'
+import { SharedPresenceOrb } from './components/SharedPresenceOrb'
 import { useBackgroundMusic } from './hooks/useBackgroundMusic'
 
 type AuthUser = { userId: string; email: string; displayName: string }
@@ -12,8 +12,6 @@ type View = 'auth' | 'lobby' | 'call'
 
 const STORAGE_TOKEN = 'duomeet_token'
 const STORAGE_USER = 'duomeet_user'
-const STORAGE_THEME = 'duomeet_theme' // 'light' | 'dark'
-const STORAGE_ARYA = 'duomeet_arya' // '0' | '1'
 
 function fmtTime(totalSec: number) {
   const m = Math.floor(totalSec / 60)
@@ -30,8 +28,7 @@ export default function App() {
     return raw ? (JSON.parse(raw) as AuthUser) : null
   })
 
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => (localStorage.getItem(STORAGE_THEME) as any) || 'light')
-  const [aryaMode, setAryaMode] = useState<boolean>(() => localStorage.getItem(STORAGE_ARYA) === '1')
+  const [theme] = useState<'dark'>('dark')
 
   const socketRef = useRef<ReturnType<typeof createAuthedSocket> | null>(null)
 
@@ -64,8 +61,6 @@ export default function App() {
   const [callStartMs, setCallStartMs] = useState<number | null>(null)
   const [callSeconds, setCallSeconds] = useState(0)
 
-  const [heartBurst, setHeartBurst] = useState(false)
-
   const { enabled: musicOn, toggle: toggleMusic } = useBackgroundMusic()
 
   const serverUrl = import.meta.env.VITE_SERVER_URL as string
@@ -76,27 +71,10 @@ export default function App() {
     return p ? p.displayName : 'Partner'
   }, [roomState, user?.userId])
 
-  function handleGlowMove(e: React.MouseEvent<HTMLDivElement>) {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    e.currentTarget.style.setProperty('--mx', `${x}px`)
-    e.currentTarget.style.setProperty('--my', `${y}px`)
-  }
-
-  function handleGlowLeave(e: React.MouseEvent<HTMLDivElement>) {
-    e.currentTarget.style.setProperty('--mx', '50%')
-    e.currentTarget.style.setProperty('--my', '20%')
-  }
-
-  // Apply theme classes on <html>
+  // Apply dark theme
   useEffect(() => {
-    const root = document.documentElement
-    root.classList.toggle('dark', theme === 'dark')
-    root.classList.toggle('arya', aryaMode)
-    localStorage.setItem(STORAGE_THEME, theme)
-    localStorage.setItem(STORAGE_ARYA, aryaMode ? '1' : '0')
-  }, [theme, aryaMode])
+    document.documentElement.classList.add('dark')
+  }, [])
 
   // Simple auth bootstrap
   useEffect(() => {
@@ -196,8 +174,6 @@ export default function App() {
       onConnectionState: (state) => {
         setConnState(state)
         if (state === 'connected') {
-          setHeartBurst(true)
-          setTimeout(() => setHeartBurst(false), 1800)
           setCallStartMs((cur) => cur ?? Date.now())
         }
       },
@@ -440,316 +416,232 @@ export default function App() {
   }
 
   const header = (
-    <div className="glass flex items-center justify-between rounded-2xl px-5 py-3.5 animate-fade-up">
-      <div className="flex items-center gap-3">
-        {/* Logo space — drop your logo image in /public/logo.png */}
-        <div className="logo-mark">
-          <img src="/logo.png" alt="DuoMeet" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-        </div>
+    <header className="glass-panel flex items-center justify-between px-6 py-4">
+      <div className="flex items-center gap-4">
+        <img src="/logo.png" alt="DuoMeet" className="h-10 w-10 rounded-xl" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
         <div>
-          <div className="text-base font-bold tracking-tight grad-text">DuoMeet</div>
-          <div className="text-[0.65rem] font-medium text-[rgb(var(--muted))]">Private 1&#8209;to&#8209;1 calling</div>
+          <h1 className="font-serif text-lg font-semibold text-[rgb(var(--champagne))]">DuoMeet</h1>
+          <p className="text-xs text-[rgb(var(--fg-muted))]">Private moments, together</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {/* Theme toggle */}
+      {user && (
         <button
-          className="btn-secondary flex items-center gap-1.5"
-          onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
+          className="btn-icon text-[rgb(var(--fg-muted))] hover:text-[rgb(var(--rose-gold))]"
+          onClick={logout}
+          title="Sign out"
         >
-          {theme === 'dark' ? (
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
-          ) : (
-            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg>
-          )}
-          {theme === 'dark' ? 'Light' : 'Dark'}
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+          </svg>
         </button>
-
-        {/* Arya mode toggle */}
-        <button
-          className={
-            'btn-secondary flex items-center gap-1.5 ' +
-            (aryaMode ? '!border-rose-400/50 !bg-rose-500/10 !text-rose-400' : '')
-          }
-          onClick={() => setAryaMode((v) => !v)}
-        >
-          <span className="text-sm">&#x2764;</span>
-          Arya
-        </button>
-
-        {user ? (
-          <button
-            className="btn-secondary !border-red-400/30 !text-red-400 hover:!bg-red-500/10"
-            onClick={logout}
-          >
-            Logout
-          </button>
-        ) : null}
-      </div>
-    </div>
+      )}
+    </header>
   )
 
   return (
-    <div className="relative min-h-dvh glow-surface" onMouseMove={handleGlowMove} onMouseLeave={handleGlowLeave}>
-      <GradientBackdrop arya={aryaMode} />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
+    <div className="relative min-h-dvh bg-[rgb(var(--bg-deep))] overflow-hidden">
+      {/* Ambient gradient backdrop */}
+      <div className="ambient-gradient" />
+
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
         {header}
 
-        {error ? (
-          <div className="animate-fade-up rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 backdrop-blur">
-            <div className="flex items-center gap-2">
+        {error && (
+          <div className="glass-panel border-red-500/30 bg-red-500/5 px-5 py-3 text-sm text-red-400 animate-fade-in-scale">
+            <div className="flex items-center gap-3">
               <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
               </svg>
               {error}
             </div>
           </div>
-        ) : null}
+        )}
 
-        {view === 'auth' ? (
-          <AuthCard onLogin={login} onRegister={register} />
-        ) : null}
+        {view === 'auth' && <AuthCard onLogin={login} onRegister={register} />}
 
-        {view === 'lobby' && user ? (
-          <div className="grid gap-4 stagger">
-            <div className="grid gap-4 md:grid-cols-2">
-
-            {/* ── Create Room Card ──────────────── */}
-            <div className="glass hover-lift interactive-card rounded-2xl p-6 animate-fade-up">
-              <div className="flex items-center gap-2">
-                <svg className="h-5 w-5 text-[rgb(var(--grad-a))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <div className="text-sm font-bold">Create a room</div>
+        {view === 'lobby' && user && (
+          <div className="grid gap-6 md:grid-cols-2 animate-fade-in-scale">
+            {/* Create Room */}
+            <div className="glass-panel p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-10 w-10 rounded-full bg-[rgb(var(--rose-gold))]/10 flex items-center justify-center">
+                  <svg className="h-5 w-5 text-[rgb(var(--rose-gold))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="font-serif text-lg font-medium text-[rgb(var(--champagne))]">Create a room</h2>
+                  <p className="text-xs text-[rgb(var(--fg-muted))]">Start a private space for two</p>
+                </div>
               </div>
-              <div className="mt-2 text-xs text-[rgb(var(--muted))]">Start a private call. Share the code with your partner.</div>
 
-              <label className="mt-5 block text-xs font-semibold text-[rgb(var(--muted))]">Room password (optional)</label>
+              <label className="block text-xs font-medium text-[rgb(var(--fg-muted))] mb-2">Password (optional)</label>
               <input
                 value={roomPassword}
                 onChange={(e) => setRoomPassword(e.target.value)}
-                className="input-field mt-1.5"
+                className="input-luxury mb-6"
                 placeholder="Leave empty for no password"
                 type="password"
               />
 
-              <button className="btn-accent mt-5 w-full" onClick={createRoom}>
+              <button className="btn-luxury w-full" onClick={createRoom}>
                 Create room
               </button>
 
-              {roomId ? (
-                <div className="mt-4 rounded-xl border border-[rgb(var(--border))]/40 bg-[rgb(var(--bg))]/30 p-3.5">
-                  <div className="text-[0.65rem] font-semibold uppercase tracking-widest text-[rgb(var(--muted))]">Room code</div>
-                  <div className="mt-1.5 flex items-center justify-between gap-2">
-                    <div className="font-mono text-lg font-bold grad-text">{roomId}</div>
+              {roomId && (
+                <div className="mt-6 p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div className="text-xs text-[rgb(var(--fg-muted))] mb-2">Room Code</div>
+                  <div className="flex items-center justify-between gap-3">
+                    <code className="font-mono text-lg text-[rgb(var(--champagne))]">{roomId}</code>
                     <button
-                      className="btn-secondary"
-                      onClick={async () => {
-                        await navigator.clipboard.writeText(roomId)
-                      }}
+                      className="btn-icon text-[rgb(var(--rose-gold))]"
+                      onClick={() => navigator.clipboard.writeText(roomId)}
                     >
-                      Copy
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+                      </svg>
                     </button>
                   </div>
                 </div>
-              ) : null}
+              )}
             </div>
 
-            {/* ── Join Room Card ────────────────── */}
-            <div className="glass hover-lift interactive-card rounded-2xl p-6 animate-fade-up">
-              <div className="flex items-center gap-2">
-                <svg className="h-5 w-5 text-[rgb(var(--grad-b))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                </svg>
-                <div className="text-sm font-bold">Join a room</div>
+            {/* Join Room */}
+            <div className="glass-panel p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-10 w-10 rounded-full bg-[rgb(var(--champagne))]/10 flex items-center justify-center">
+                  <svg className="h-5 w-5 text-[rgb(var(--champagne))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="font-serif text-lg font-medium text-[rgb(var(--champagne))]">Join a room</h2>
+                  <p className="text-xs text-[rgb(var(--fg-muted))]">Enter your partner's code</p>
+                </div>
               </div>
-              <div className="mt-2 text-xs text-[rgb(var(--muted))]">Paste a room code your partner sent you.</div>
 
-              <label className="mt-5 block text-xs font-semibold text-[rgb(var(--muted))]">Room code</label>
+              <label className="block text-xs font-medium text-[rgb(var(--fg-muted))] mb-2">Room code</label>
               <input
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value)}
-                className="input-field mt-1.5 font-mono"
+                className="input-luxury mb-4 font-mono"
                 placeholder="e.g. 8kF2aPqZxB"
               />
 
-              <label className="mt-4 block text-xs font-semibold text-[rgb(var(--muted))]">Room password (if set)</label>
+              <label className="block text-xs font-medium text-[rgb(var(--fg-muted))] mb-2">Password (if set)</label>
               <input
                 value={roomPassword}
                 onChange={(e) => setRoomPassword(e.target.value)}
-                className="input-field mt-1.5"
-                placeholder="Password (optional)"
+                className="input-luxury mb-6"
+                placeholder="Optional"
                 type="password"
               />
 
-              <button className="btn-primary mt-5 w-full" onClick={joinRoom}>
-                <span>Join room</span>
+              <button className="btn-luxury w-full" onClick={joinRoom}>
+                Join room
               </button>
 
-              <div className="mt-4 flex items-center gap-3 text-xs">
-                <span
-                  className={`chip tooltip ${socketConnected ? 'chip-online' : 'chip-offline'}`}
-                  data-tip="Socket.io connection to the server"
-                >
-                  <span className={`status-dot ${socketConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                  Socket {socketConnected ? 'online' : 'offline'}
+              <div className="mt-6 flex items-center gap-3 text-xs">
+                <span className={`status-dot ${socketConnected ? 'connected' : 'disconnected'}`} />
+                <span className="text-[rgb(var(--fg-muted))]">
+                  {socketConnected ? 'Connected' : 'Connecting...'}
                 </span>
-                <span className="chip chip-offline tooltip" data-tip="WebRTC peer connection status">
-                  WebRTC {connState === 'new' ? 'waiting' : connState}
-                </span>
-              </div>
-            </div>
-            </div>
-
-            {/* ── Call History Card ─────────────── */}
-            <div className="glass hover-lift interactive-card rounded-2xl p-6 animate-fade-up">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <svg className="h-5 w-5 text-[rgb(var(--muted))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                  </svg>
-                  <div>
-                    <div className="text-sm font-bold">Recent calls</div>
-                    <div className="mt-0.5 text-[0.65rem] text-[rgb(var(--muted))]">Your call history</div>
-                  </div>
-                </div>
-                <button
-                  className="btn-secondary"
-                  onClick={loadHistory}
-                  disabled={historyLoading}
-                >
-                  {historyLoading ? 'Loading…' : 'Refresh'}
-                </button>
-              </div>
-
-              <div className="mt-4 grid gap-2 text-sm">
-                {historyItems.length === 0 ? (
-                  <div className="rounded-xl border border-[rgb(var(--border))]/30 bg-[rgb(var(--bg))]/20 p-4 text-center text-xs text-[rgb(var(--muted))]">
-                    No history yet — start your first call!
-                  </div>
-                ) : (
-                  historyItems.map((it) => (
-                    <div key={it._id} className="rounded-xl border border-[rgb(var(--border))]/30 bg-[rgb(var(--bg))]/20 px-4 py-3 transition-colors hover:bg-[rgb(var(--card-hover))]/40">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="font-mono text-xs text-[rgb(var(--muted))]">{it.roomId}</div>
-                        <div className="chip chip-online">{fmtTime(Number(it.durationSec || 0))}</div>
-                      </div>
-                      <div className="mt-1.5 text-xs font-medium">
-                        {(it.participants || []).map((p: any) => p.displayName).join(' &bull; ')}
-                      </div>
-                    </div>
-                  ))
-                )}
               </div>
             </div>
           </div>
-        ) : null}
+        )}
 
-        {view === 'call' && user ? (
-          <div className="relative grid gap-4 lg:grid-cols-[1fr_360px] animate-fade-up">
-            <AryaBackgroundHearts enabled={aryaMode} />
-            <HeartsBurst active={heartBurst} />
-
-            <div className="flex flex-col gap-4">
-              {/* Room info bar */}
-              <div className="glass hover-lift interactive-card rounded-2xl px-5 py-3.5">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="logo-mark h-8 w-8 rounded-lg">
-                      <img src="/logo.png" alt="" className="h-full w-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold uppercase tracking-widest text-[rgb(var(--muted))]">Room</div>
-                      <div className="font-mono text-sm font-bold grad-text">{roomId}</div>
-                    </div>
+        {view === 'call' && user && (
+          <div className="relative grid gap-6 lg:grid-cols-[1fr_340px] animate-fade-in-scale">
+            <div className="flex flex-col gap-6">
+              {/* Room info */}
+              <div className="glass-panel flex items-center justify-between px-6 py-4">
+                <div className="flex items-center gap-4">
+                  <img src="/logo.png" alt="" className="h-8 w-8 rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  <div>
+                    <div className="text-xs text-[rgb(var(--fg-muted))]">Room</div>
+                    <code className="font-mono text-sm text-[rgb(var(--champagne))]">{roomId}</code>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`chip tooltip ${socketConnected ? 'chip-online' : 'chip-offline'}`}
-                      data-tip="Socket.io connection to the server"
-                    >
-                      <span className={`status-dot ${socketConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                      {socketConnected ? 'Connected' : 'Offline'}
-                    </span>
-                    <span className="chip chip-online font-mono">{fmtTime(callSeconds)}</span>
-                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className={`status-dot ${socketConnected ? 'connected' : 'disconnected'}`} />
+                  <span className="font-mono text-sm text-[rgb(var(--fg-muted))]">{fmtTime(callSeconds)}</span>
                 </div>
               </div>
 
               {/* Video tiles */}
               <div className="grid gap-4 md:grid-cols-2">
-                <VideoTile stream={localStream} label={meLabel} muted connected={connState === 'connected'} />
-                <VideoTile stream={remoteStream} label={otherLabel} connected={connState === 'connected'} />
+                <VideoTile stream={localStream} label={meLabel} muted isLocal />
+                <VideoTile stream={remoteStream} label={otherLabel} />
               </div>
 
-              {/* Controls bar */}
-              <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-3.5">
-                <div className="flex flex-wrap gap-2">
+              {/* Shared Presence Orb */}
+              {socketRef.current && (
+                <SharedPresenceOrb
+                  socket={socketRef.current}
+                  roomId={roomId}
+                  localStream={localStream}
+                  remoteStream={remoteStream}
+                  connected={connState === 'connected'}
+                />
+              )}
+
+              {/* Controls */}
+              <div className="glass-panel flex items-center justify-between px-6 py-4">
+                <div className="flex items-center gap-3">
                   <button
-                    className={
-                      'btn-secondary flex items-center gap-1.5 ' +
-                      (!micOn ? '!border-red-400/40 !bg-red-500/15 !text-red-400' : '')
-                    }
+                    className={`btn-icon ${!micOn ? 'text-red-400 bg-red-500/10' : ''}`}
                     onClick={toggleMic}
+                    title={micOn ? 'Mute' : 'Unmute'}
                   >
                     {micOn ? (
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" /></svg>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" /></svg>
                     ) : (
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m18.364 18.364-3.067-3.067M3.75 7.5l.693-.694a2.25 2.25 0 0 1 3.182 0l.396.396M12 18.75a6 6 0 0 0 5.574-3.787M3.75 7.5V12a6 6 0 0 0 6 6m0 0v3.75m-3.75 0h7.5m1.125-16.5a3 3 0 0 1 3 3V12m-1.5-4.5L3 21" /></svg>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m18.364 18.364-3.067-3.067M3.75 7.5l.693-.694a2.25 2.25 0 0 1 3.182 0l.396.396M12 18.75a6 6 0 0 0 5.574-3.787M3.75 7.5V12a6 6 0 0 0 6 6m0 0v3.75m-3.75 0h7.5m1.125-16.5a3 3 0 0 1 3 3V12m-1.5-4.5L3 21" /></svg>
                     )}
-                    {micOn ? 'Mute' : 'Unmute'}
                   </button>
 
                   <button
-                    className={
-                      'btn-secondary flex items-center gap-1.5 ' +
-                      (!camOn ? '!border-red-400/40 !bg-red-500/15 !text-red-400' : '')
-                    }
+                    className={`btn-icon ${!camOn ? 'text-red-400 bg-red-500/10' : ''}`}
                     onClick={toggleCam}
+                    title={camOn ? 'Camera off' : 'Camera on'}
                   >
                     {camOn ? (
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
                     ) : (
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M12 18.75H4.5a2.25 2.25 0 0 1-2.25-2.25V9m12.841 9.091L16.5 19.5m-1.409-.409 1.409.409M3 3l1.5 1.5m0 0 14.25 14.25" /></svg>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M12 18.75H4.5a2.25 2.25 0 0 1-2.25-2.25V9m12.841 9.091L16.5 19.5m-1.409-.409 1.409.409M3 3l1.5 1.5m0 0 14.25 14.25" /></svg>
                     )}
-                    {camOn ? 'Cam off' : 'Cam on'}
                   </button>
 
                   <button
-                    className={
-                      'btn-secondary flex items-center gap-1.5 ' +
-                      (sharing ? '!border-violet-400/40 !bg-violet-500/15 !text-violet-400' : '')
-                    }
+                    className={`btn-icon ${sharing ? 'text-violet-400 bg-violet-500/10' : ''}`}
                     onClick={() => (sharing ? stopScreenShare() : startScreenShare())}
+                    title={sharing ? 'Stop sharing' : 'Share screen'}
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" /></svg>
-                    {sharing ? 'Stop share' : 'Share'}
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" /></svg>
                   </button>
 
                   <button
-                    className={
-                      'btn-secondary flex items-center gap-1.5 ' +
-                      (musicOn ? '!border-amber-400/40 !bg-amber-500/15 !text-amber-400' : '')
-                    }
-                    onClick={() => toggleMusic().catch(() => setError('Audio blocked by browser — click again'))}
+                    className={`btn-icon ${musicOn ? 'text-amber-400 bg-amber-500/10' : ''}`}
+                    onClick={() => toggleMusic().catch(() => setError('Audio blocked — click again'))}
+                    title={musicOn ? 'Music on' : 'Music off'}
                   >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z" /></svg>
-                    {musicOn ? 'Music on' : 'Music off'}
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z" /></svg>
                   </button>
                 </div>
 
                 <button
-                  className="flex items-center gap-1.5 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/25 transition-all hover:bg-red-400 hover:shadow-red-500/40"
+                  className="flex items-center gap-2 rounded-full bg-red-500 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-400"
                   onClick={endCall}
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 3.75 18 6m0 0 2.25 2.25M18 6l2.25-2.25M18 6l-2.25 2.25m1.5 13.5c-8.284 0-15-6.716-15-15V4.5A2.25 2.25 0 0 1 4.5 2.25h1.372c.516 0 .966.351 1.091.852l1.106 4.423c.11.44-.054.902-.417 1.173l-1.293.97a1.062 1.062 0 0 0-.38 1.21 12.035 12.035 0 0 0 7.143 7.143c.441.162.928-.004 1.21-.38l.97-1.293a1.125 1.125 0 0 1 1.173-.417l4.423 1.106c.5.125.852.575.852 1.091V19.5a2.25 2.25 0 0 1-2.25 2.25h-2.25Z" /></svg>
-                  End call
+                  End
                 </button>
               </div>
             </div>
 
-            <div className="h-[520px] lg:h-auto">
+            <div className="h-[480px] lg:h-auto">
               <ChatPanel
                 meUserId={user.userId}
                 messages={messages}
@@ -759,10 +651,10 @@ export default function App() {
               />
             </div>
           </div>
-        ) : null}
+        )}
 
-        <footer className="py-4 text-center text-[0.65rem] font-medium text-[rgb(var(--muted))]/60">
-          DuoMeet &mdash; WebRTC &bull; Socket.io &bull; STUN: Google public
+        <footer className="py-6 text-center text-xs text-[rgb(var(--fg-muted))]/50">
+          DuoMeet — Private moments, together
         </footer>
       </div>
     </div>
@@ -780,45 +672,42 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
   const [localErr, setLocalErr] = useState<string | null>(null)
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 stagger">
+    <div className="grid gap-6 md:grid-cols-2 animate-fade-in-scale">
       {/* Welcome panel */}
-      <div className="glass hover-lift interactive-card rounded-2xl p-7 animate-fade-up">
-        <div className="logo-mark mb-5 h-12 w-12 rounded-xl">
-          <img src="/logo.png" alt="DuoMeet" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-        </div>
-        <h1 className="text-2xl font-extrabold tracking-tight">
-          Welcome to <span className="grad-text">DuoMeet</span>
+      <div className="glass-panel p-8">
+        <img src="/logo.png" alt="DuoMeet" className="h-14 w-14 rounded-xl mb-6" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+
+        <h1 className="font-serif text-2xl font-semibold text-[rgb(var(--champagne))]">
+          Welcome to DuoMeet
         </h1>
-        <p className="mt-3 text-sm leading-relaxed text-[rgb(var(--muted))]">
-          A private 1&#8209;to&#8209;1 video call space designed for two. Crystal clear audio, real&#8209;time chat, and a cozy atmosphere — all in your browser.
+        <p className="mt-4 text-sm leading-relaxed text-[rgb(var(--fg-muted))]">
+          A private video call space designed for two. Crystal clear audio, real-time chat, and a cinematic atmosphere — all in your browser.
         </p>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400">
+        <div className="mt-8 flex flex-wrap gap-3">
+          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs text-emerald-400">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-            End-to-end WebRTC
-          </div>
-          <div className="flex items-center gap-2 rounded-full bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-400">
+            WebRTC encrypted
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-violet-500/10 px-3 py-1.5 text-xs text-violet-400">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
             Screen sharing
-          </div>
-          <div className="flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400">
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs text-amber-400">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
             Built-in chat
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-xl border border-[rgb(var(--border))]/30 bg-[rgb(var(--bg))]/20 p-4 text-xs text-[rgb(var(--muted))]">
-          <strong className="font-bold text-[rgb(var(--fg))]">Tip:</strong> In production, HTTPS is required for camera/mic access.
+          </span>
         </div>
       </div>
 
       {/* Auth form */}
-      <div className="glass hover-lift interactive-card rounded-2xl p-7 animate-fade-up">
-        <div className="flex items-center justify-between">
-          <div className="text-lg font-bold">{mode === 'login' ? 'Sign in' : 'Create account'}</div>
+      <div className="glass-panel p-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-serif text-xl font-medium text-[rgb(var(--champagne))]">
+            {mode === 'login' ? 'Sign in' : 'Create account'}
+          </h2>
           <button
-            className="text-xs font-bold grad-text hover:opacity-80"
+            className="text-xs text-[rgb(var(--rose-gold))] hover:underline"
             onClick={() => {
               setLocalErr(null)
               setMode((m) => (m === 'login' ? 'register' : 'login'))
@@ -828,14 +717,14 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
           </button>
         </div>
 
-        {localErr ? (
-          <div className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400">
+        {localErr && (
+          <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-2 text-sm text-red-400">
             {localErr}
           </div>
-        ) : null}
+        )}
 
         <form
-          className="mt-5 flex flex-col gap-4"
+          className="flex flex-col gap-5"
           onSubmit={async (e) => {
             e.preventDefault()
             setLocalErr(null)
@@ -854,35 +743,35 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
             }
           }}
         >
-          {mode === 'register' ? (
+          {mode === 'register' && (
             <div>
-              <label className="block text-xs font-semibold text-[rgb(var(--muted))]">Display name</label>
+              <label className="block text-xs font-medium text-[rgb(var(--fg-muted))] mb-2">Display name</label>
               <input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="input-field mt-1.5"
-                placeholder="e.g. Arya"
+                className="input-luxury"
+                placeholder="Your name"
               />
             </div>
-          ) : null}
+          )}
 
           <div>
-            <label className="block text-xs font-semibold text-[rgb(var(--muted))]">Email</label>
+            <label className="block text-xs font-medium text-[rgb(var(--fg-muted))] mb-2">Email</label>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input-field mt-1.5"
+              className="input-luxury"
               placeholder="you@example.com"
               type="email"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[rgb(var(--muted))]">Password</label>
+            <label className="block text-xs font-medium text-[rgb(var(--fg-muted))] mb-2">Password</label>
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input-field mt-1.5"
+              className="input-luxury"
               placeholder="At least 8 characters"
               type="password"
             />
@@ -890,9 +779,9 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
 
           <button
             disabled={busy}
-            className="btn-primary mt-2 w-full disabled:opacity-50"
+            className="btn-luxury mt-2 w-full disabled:opacity-50"
           >
-            <span>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}</span>
+            {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
           </button>
         </form>
       </div>
