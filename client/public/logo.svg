@@ -1,0 +1,30 @@
+<svg width="768" height="768" viewBox="0 0 768 768" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="DuoMeet logo">
+  <defs>
+    <style>
+      .stroke { stroke: #8b5a3c; }
+      .fill { fill: #8b5a3c; }
+      .txt { fill: #8b5a3c; font-family: 'Times New Roman', Georgia, serif; letter-spacing: 8px; }
+      .mono { fill: #8b5a3c; font-family: 'Times New Roman', Georgia, serif; }
+    </style>
+    <path id="outerArcTop" d="M 84 384 A 300 300 0 0 1 684 384" />
+    <path id="outerArcBottom" d="M 684 384 A 300 300 0 0 1 84 384" />
+  </defs>
+
+  <rect width="768" height="768" fill="#eee7dd"/>
+
+  <circle cx="384" cy="384" r="340" fill="none" class="stroke" stroke-width="5"/>
+  <circle cx="384" cy="384" r="262" fill="none" class="stroke" stroke-width="4"/>
+
+  <circle cx="129" cy="384" r="7" class="fill"/>
+  <circle cx="639" cy="384" r="7" class="fill"/>
+
+  <text font-size="62" class="txt" textLength="500">
+    <textPath href="#outerArcTop" startOffset="50%" text-anchor="middle">DUO MEET</textPath>
+  </text>
+
+  <text font-size="62" class="txt" textLength="500">
+    <textPath href="#outerArcBottom" startOffset="50%" text-anchor="middle">DUO MEET</textPath>
+  </text>
+
+  <text x="384" y="438" text-anchor="middle" class="mono" font-size="220" font-weight="700">DM</text>
+</svg>

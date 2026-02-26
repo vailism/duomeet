@@ -442,9 +442,9 @@ export default function App() {
   const header = (
     <div className="glass flex items-center justify-between rounded-2xl px-5 py-3.5 animate-fade-up">
       <div className="flex items-center gap-3">
-        {/* Logo space — drop your logo image in /public/logo.png */}
+        {/* Logo space — drop your logo image in /public/logo.svg */}
         <div className="logo-mark">
-          <img src="/logo.png" alt="DuoMeet" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          <img src="/logo.svg" alt="DuoMeet" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
         </div>
         <div>
           <div className="text-base font-bold tracking-tight grad-text">DuoMeet</div>
@@ -657,7 +657,7 @@ export default function App() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="logo-mark h-8 w-8 rounded-lg">
-                      <img src="/logo.png" alt="" className="h-full w-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                      <img src="/logo.svg" alt="" className="h-full w-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                     </div>
                     <div>
                       <div className="text-xs font-bold uppercase tracking-widest text-[rgb(var(--muted))]">Room</div>
@@ -784,7 +784,7 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
       {/* Welcome panel */}
       <div className="glass hover-lift interactive-card rounded-2xl p-7 animate-fade-up">
         <div className="logo-mark mb-5 h-12 w-12 rounded-xl">
-          <img src="/logo.png" alt="DuoMeet" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+          <img src="/logo.svg" alt="DuoMeet" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
         </div>
         <h1 className="text-2xl font-extrabold tracking-tight">
           Welcome to <span className="grad-text">DuoMeet</span>

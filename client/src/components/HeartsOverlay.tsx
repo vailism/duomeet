@@ -28,11 +28,11 @@ export function HeartsBurst({ active }: { active: boolean }) {
   }, [active])
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 overflow-hidden z-50">
       {hearts.map((h) => (
-        <div
+        <span
           key={h.id}
-          className="heart text-rose-400"
+          className="heart"
           style={{
             left: `${h.left}%`,
             bottom: `${h.bottom}%`,
@@ -41,8 +41,8 @@ export function HeartsBurst({ active }: { active: boolean }) {
             animationDelay: `${h.delayMs}ms`,
           }}
         >
-          &#x2764;
-        </div>
+          ♥
+        </span>
       ))}
     </div>
   )
@@ -64,7 +64,7 @@ export function AryaBackgroundHearts({ enabled }: { enabled: boolean }) {
         bottom: randomBetween(0, 10),
         size: randomBetween(10, 18),
         delayMs: 0,
-        opacity: randomBetween(0.1, 0.2),
+        opacity: randomBetween(0.1, 0.25),
       }
       setItems((prev) => [...prev.slice(-14), h])
 
@@ -79,9 +79,9 @@ export function AryaBackgroundHearts({ enabled }: { enabled: boolean }) {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {items.map((h) => (
-        <div
+        <span
           key={h.id}
-          className="heart text-rose-400/60"
+          className="heart"
           style={{
             left: `${h.left}%`,
             bottom: `${h.bottom}%`,
@@ -89,46 +89,71 @@ export function AryaBackgroundHearts({ enabled }: { enabled: boolean }) {
             opacity: h.opacity,
           }}
         >
-          &#x2764;
-        </div>
+          ♥
+        </span>
       ))}
     </div>
   )
 }
 
-/** Aurora gradient backdrop with animated blobs */
+/** Elegant aurora gradient backdrop - rose gold themed */
 export function GradientBackdrop({ arya }: { arya: boolean }) {
-  const blobs = useMemo(() => {
+  const orbs = useMemo(() => {
     if (arya) {
       return [
-        { color: 'bg-rose-500', size: 'w-96 h-96', pos: 'top-[-8rem] left-[-6rem]', delay: '0s' },
-        { color: 'bg-purple-500', size: 'w-80 h-80', pos: 'top-[20%] right-[-4rem]', delay: '4s' },
-        { color: 'bg-pink-400', size: 'w-72 h-72', pos: 'bottom-[-4rem] left-[30%]', delay: '8s' },
+        { bg: 'rgb(244, 182, 162)', size: 400, x: -100, y: -80, delay: 0 },
+        { bg: 'rgb(251, 133, 153)', size: 350, x: '70%', y: '15%', delay: 5 },
+        { bg: 'rgb(220, 140, 115)', size: 300, x: '30%', y: '60%', delay: 10 },
       ]
     }
     return [
-      { color: 'bg-teal-500', size: 'w-96 h-96', pos: 'top-[-8rem] left-[-6rem]', delay: '0s' },
-      { color: 'bg-violet-600', size: 'w-80 h-80', pos: 'top-[20%] right-[-4rem]', delay: '6s' },
-      { color: 'bg-indigo-500', size: 'w-72 h-72', pos: 'bottom-[-4rem] left-[30%]', delay: '12s' },
+      { bg: 'rgb(251, 207, 178)', size: 400, x: -100, y: -80, delay: 0 },
+      { bg: 'rgb(205, 164, 131)', size: 350, x: '70%', y: '15%', delay: 6 },
+      { bg: 'rgb(244, 182, 162)', size: 300, x: '30%', y: '60%', delay: 12 },
     ]
   }, [arya])
 
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[rgb(var(--bg))]/50 to-[rgb(var(--bg))]" />
+      {/* Base warm gradient */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(
+            135deg,
+            rgb(var(--bg)) 0%,
+            color-mix(in srgb, rgb(var(--gold-light)) 5%, rgb(var(--bg))) 50%,
+            rgb(var(--bg)) 100%
+          )`
+        }}
+      />
 
-      {/* Aurora blobs */}
-      {blobs.map((b, i) => (
+      {/* Aurora orbs */}
+      {orbs.map((orb, i) => (
         <div
           key={i}
-          className={`aurora-blob ${b.color} ${b.size} ${b.pos}`}
-          style={{ animationDelay: b.delay }}
+          className="aurora-orb"
+          style={{
+            background: orb.bg,
+            width: orb.size,
+            height: orb.size,
+            left: typeof orb.x === 'number' ? orb.x : orb.x,
+            top: typeof orb.y === 'number' ? orb.y : orb.y,
+            animationDelay: `${orb.delay}s`,
+          }}
         />
       ))}
 
-      {/* Noise overlay for texture */}
-      <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 200 200\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")' }} />
+      {/* Elegant noise texture */}
+      <div 
+        className="absolute inset-0 opacity-[0.02] mix-blend-overlay" 
+        style={{ 
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` 
+        }} 
+      />
+
+      {/* Subtle gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgb(var(--bg))]/40" />
     </div>
   )
 }
