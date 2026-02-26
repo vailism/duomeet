@@ -96,7 +96,6 @@ export function AryaBackgroundHearts({ enabled }: { enabled: boolean }) {
   )
 }
 
-/** Elegant aurora gradient backdrop - rose gold themed */
 export function GradientBackdrop({ arya }: { arya: boolean }) {
   const orbs = useMemo(() => {
     if (arya) {
@@ -115,8 +114,7 @@ export function GradientBackdrop({ arya }: { arya: boolean }) {
 
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-      {/* Base warm gradient */}
-      <div 
+      <div
         className="absolute inset-0"
         style={{
           background: `linear-gradient(
@@ -128,7 +126,6 @@ export function GradientBackdrop({ arya }: { arya: boolean }) {
         }}
       />
 
-      {/* Aurora orbs */}
       {orbs.map((orb, i) => (
         <div
           key={i}
@@ -144,15 +141,13 @@ export function GradientBackdrop({ arya }: { arya: boolean }) {
         />
       ))}
 
-      {/* Elegant noise texture */}
-      <div 
-        className="absolute inset-0 opacity-[0.02] mix-blend-overlay" 
-        style={{ 
+      <div
+        className="absolute inset-0 opacity-[0.02] mix-blend-overlay"
+        style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` 
-        }} 
+        }}
       />
 
-      {/* Subtle gradient overlay for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[rgb(var(--bg))]/40" />
     </div>
   )

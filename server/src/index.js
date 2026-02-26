@@ -18,7 +18,6 @@ async function main() {
   const normalizeOrigin = (origin) => String(origin || '').trim().replace(/\/+$/, '')
   const allowedOrigins = new Set((config.clientOrigins || []).map(normalizeOrigin))
   const corsOrigin = (origin, cb) => {
-    // Non-browser clients (curl, server-to-server) often omit Origin.
     if (!origin) return cb(null, true)
     const normalized = normalizeOrigin(origin)
     if (allowedOrigins.has(normalized)) return cb(null, origin)
@@ -26,11 +25,8 @@ async function main() {
   }
 
   const app = express()
-  // `express-rate-limit` rejects `trust proxy: true` because it allows IP spoofing.
-  // On platforms like Render, requests come through a single reverse proxy.
   app.set('trust proxy', config.nodeEnv === 'production' ? 1 : false)
 
-  // Force HTTPS in production behind proxy (Render, etc.)
   app.use((req, res, next) => {
     if (config.nodeEnv === 'production') {
       const proto = req.headers['x-forwarded-proto']
@@ -50,7 +46,6 @@ async function main() {
   )
   app.use(express.json({ limit: '1mb' }))
 
-  // Basic abuse protection (tune as needed)
   app.use(
     rateLimit({
       windowMs: 60 * 1000,
@@ -81,15 +76,12 @@ async function main() {
   setupSockets(io)
 
   server.listen(config.port, () => {
-    // eslint-disable-next-line no-console
     console.log(`[server] listening on :${config.port}`)
-    // eslint-disable-next-line no-console
     console.log(`[server] client origin(s): ${(config.clientOrigins || []).join(', ')}`)
   })
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err)
   process.exit(1)
 })

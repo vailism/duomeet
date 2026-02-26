@@ -38,7 +38,6 @@ export function VideoTile({ stream, label, muted, isLocal }: Props) {
         </div>
       )}
 
-      {/* Label */}
       <div className="absolute bottom-4 left-4 flex items-center gap-3">
         <span className={`status-dot ${stream ? 'connected' : 'disconnected'}`} />
         <span className="text-xs font-medium text-white/80 tracking-wide">{label}</span>

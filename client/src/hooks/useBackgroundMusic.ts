@@ -1,7 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-
-// Background music toggle implemented via Web Audio (no external assets).
-// It's a gentle, low-volume pad-like tone.
 export function useBackgroundMusic() {
   const [enabled, setEnabled] = useState(false)
   const audioCtxRef = useRef<AudioContext | null>(null)
@@ -14,7 +11,6 @@ export function useBackgroundMusic() {
       try {
         oscRef.current?.stop()
       } catch {
-        // ignore
       }
       oscRef.current = null
       audioCtxRef.current?.close().catch(() => {})
@@ -32,9 +28,8 @@ export function useBackgroundMusic() {
     const gain = ctx.createGain()
     const filter = ctx.createBiquadFilter()
 
-    // A warm-ish pad tone.
     osc.type = 'sine'
-    osc.frequency.value = 196 // G3
+    osc.frequency.value = 196
 
     filter.type = 'lowpass'
     filter.frequency.value = 800
@@ -47,7 +42,6 @@ export function useBackgroundMusic() {
 
     osc.start()
 
-    // Fade in.
     gain.gain.linearRampToValueAtTime(0.03, ctx.currentTime + 0.6)
 
     oscRef.current = osc
@@ -60,7 +54,6 @@ export function useBackgroundMusic() {
     const gain = gainRef.current
     if (!ctx) return
 
-    // Fade out.
     if (gain) {
       gain.gain.cancelScheduledValues(ctx.currentTime)
       gain.gain.linearRampToValueAtTime(0.0, ctx.currentTime + 0.25)
@@ -70,7 +63,6 @@ export function useBackgroundMusic() {
       try {
         oscRef.current?.stop()
       } catch {
-        // ignore
       }
       oscRef.current = null
       ctx.close().catch(() => {})
@@ -81,7 +73,6 @@ export function useBackgroundMusic() {
   }
 
   async function toggle() {
-    // Some browsers require a user gesture to start audio.
     if (!enabled) {
       await start()
       setEnabled(true)

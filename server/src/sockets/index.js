@@ -4,7 +4,6 @@ import { config } from '../config.js'
 import { createRoomId, roomIdSchema } from '../utils/room.js'
 import { RoomHistory } from '../models/RoomHistory.js'
 
-// In-memory live room state (DB stores history only)
 const liveRooms = new Map()
 
 function now() {
@@ -25,7 +24,6 @@ function publicRoomState(room) {
 }
 
 export function setupSockets(io) {
-  // Socket auth: expect JWT in handshake.auth.token
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token
     if (!token) return next(new Error('Missing token'))
@@ -80,7 +78,6 @@ export function setupSockets(io) {
       const room = getRoom(roomId)
       if (!room) return ack?.({ ok: false, error: 'Room not found' })
 
-      // If user is reconnecting, replace their socketId.
       const existingIdx = room.participants.findIndex((p) => p.userId === socket.user.userId)
       if (existingIdx !== -1) {
         room.participants[existingIdx] = {
@@ -94,7 +91,6 @@ export function setupSockets(io) {
         io.to(roomId).emit('room-state', { room: publicRoomState(room) })
         io.to(roomId).emit('renegotiate', { reason: 'peer-reconnected' })
 
-        // Kick off a fresh negotiation if both participants are connected.
         const connected = room.participants.filter((p) => p.connected)
         if (connected.length === 2) {
           const first = room.participants[0]
@@ -131,7 +127,6 @@ export function setupSockets(io) {
       ack?.({ ok: true, room: publicRoomState(room), reconnected: false })
       io.to(roomId).emit('room-state', { room: publicRoomState(room) })
 
-      // Tell the first participant to start offer/answer.
       const first = room.participants[0]
       if (first?.socketId && first.socketId !== socket.id) {
         io.to(first.socketId).emit('ready-for-offer', { roomId, to: socket.id })
@@ -148,7 +143,6 @@ export function setupSockets(io) {
       ack?.({ ok: true })
     })
 
-    // WebRTC signaling (forward only)
     socket.on('webrtc-offer', ({ to, sdp, roomId }) => {
       if (!to || !sdp || !roomId) return
       io.to(to).emit('webrtc-offer', { from: socket.id, sdp, roomId })
@@ -164,7 +158,6 @@ export function setupSockets(io) {
       io.to(to).emit('webrtc-ice', { from: socket.id, candidate, roomId })
     })
 
-    // Chat
     socket.on('chat-message', ({ roomId, message }) => {
       if (!roomId || typeof message !== 'string' || !message.trim()) return
       io.to(roomId).emit('chat-message', {
@@ -186,7 +179,6 @@ export function setupSockets(io) {
     })
 
     socket.on('disconnect', async () => {
-      // Mark disconnected in any room this user is part of
       for (const room of liveRooms.values()) {
         const idx = room.participants.findIndex((p) => p.socketId === socket.id)
         if (idx !== -1) {
@@ -195,7 +187,6 @@ export function setupSockets(io) {
           io.to(room.roomId).emit('room-state', { room: publicRoomState(room) })
           socket.to(room.roomId).emit('peer-left', { roomId: room.roomId, userId: room.participants[idx].userId })
 
-          // If nobody left connected, finalize + delete.
           const anyConnected = room.participants.some((p) => p.connected)
           if (!anyConnected) {
             await finalizeRoomHistory(room)
@@ -208,7 +199,6 @@ export function setupSockets(io) {
 }
 
 async function finalizeRoomHistory(room) {
-  // Persist a history record only if the room ever had 2 participants.
   if (!room.startedAt) return
 
   const endedAt = now()
@@ -224,7 +214,6 @@ async function finalizeRoomHistory(room) {
       durationSec,
     })
   } catch {
-    // Ignore history failures (should not break calls)
   }
 }
 

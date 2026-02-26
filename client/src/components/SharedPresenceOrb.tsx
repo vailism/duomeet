@@ -31,12 +31,11 @@ export function SharedPresenceOrb({ localStream, remoteStream, connected, socket
   const [ripples, setRipples] = useState<string[]>([])
   const [floatingMessages, setFloatingMessages] = useState<FloatingMsg[]>([])
   const orbRef = useRef<HTMLDivElement>(null)
-  
+
   const localAnalyserRef = useRef<AnalyserNode | null>(null)
   const remoteAnalyserRef = useRef<AnalyserNode | null>(null)
   const animFrameRef = useRef<number>(0)
 
-  // Audio analysis setup
   useEffect(() => {
     if (!localStream) return
 
@@ -71,7 +70,6 @@ export function SharedPresenceOrb({ localStream, remoteStream, connected, socket
     }
   }, [remoteStream])
 
-  // Analyze audio levels
   useEffect(() => {
     if (!connected) return
 
@@ -97,21 +95,16 @@ export function SharedPresenceOrb({ localStream, remoteStream, connected, socket
     return () => cancelAnimationFrame(animFrameRef.current)
   }, [connected])
 
-  // Combined intensity
   const intensity = Math.min((localLevel + remoteLevel) / 1.5, 1)
   const intensityClass = intensity > 0.5 ? 'intensity-high' : intensity > 0.2 ? 'intensity-medium' : 'intensity-low'
 
-  // Click handler - send ripple to partner
   const handleOrbClick = useCallback(() => {
-    // Add local ripple
     const rippleId = `${Date.now()}`
     setRipples((prev) => [...prev, rippleId])
     setTimeout(() => setRipples((prev) => prev.filter((id) => id !== rippleId)), 1500)
 
-    // Pick a random message
     const msg = WHISPER_MESSAGES[Math.floor(Math.random() * WHISPER_MESSAGES.length)]
-    
-    // Show floating message locally
+
     const msgId = `${Date.now()}-local`
     setFloatingMessages((prev) => [
       ...prev,
@@ -119,23 +112,19 @@ export function SharedPresenceOrb({ localStream, remoteStream, connected, socket
     ])
     setTimeout(() => setFloatingMessages((prev) => prev.filter((m) => m.id !== msgId)), 3500)
 
-    // Send to partner via socket
     if (socket && roomId) {
       socket.emit('orb-touch', { roomId, message: msg })
     }
   }, [socket, roomId])
 
-  // Listen for partner's orb touch
   useEffect(() => {
     if (!socket) return
 
     const handlePartnerTouch = (data: { message: string }) => {
-      // Add ripple
       const rippleId = `partner-${Date.now()}`
       setRipples((prev) => [...prev, rippleId])
       setTimeout(() => setRipples((prev) => prev.filter((id) => id !== rippleId)), 1500)
 
-      // Show their message
       const msgId = `${Date.now()}-partner`
       setFloatingMessages((prev) => [
         ...prev,
@@ -148,7 +137,6 @@ export function SharedPresenceOrb({ localStream, remoteStream, connected, socket
     return () => socket.off('orb-touch', handlePartnerTouch)
   }, [socket])
 
-  // Dynamic orb styles based on intensity
   const orbStyle: React.CSSProperties = {
     transform: `scale(${1 + intensity * 0.15})`,
     filter: `brightness(${1 + intensity * 0.3})`,
@@ -171,7 +159,6 @@ export function SharedPresenceOrb({ localStream, remoteStream, connected, socket
 
   return (
     <div className="relative flex flex-col items-center gap-6">
-      {/* Floating messages */}
       {floatingMessages.map((msg) => (
         <span
           key={msg.id}
@@ -182,7 +169,6 @@ export function SharedPresenceOrb({ localStream, remoteStream, connected, socket
         </span>
       ))}
 
-      {/* The Orb */}
       <div
         ref={orbRef}
         className={`presence-orb ${intensityClass}`}
@@ -191,13 +177,11 @@ export function SharedPresenceOrb({ localStream, remoteStream, connected, socket
         role="button"
         aria-label="Send a gentle touch to your partner"
       >
-        {/* Ripple effects */}
         {ripples.map((id) => (
           <div key={id} className="orb-ripple" />
         ))}
       </div>
 
-      {/* Subtle label */}
       <p className="font-serif text-sm italic text-[rgb(var(--fg-muted))] tracking-wide">
         Together
       </p>

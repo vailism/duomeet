@@ -51,6 +51,7 @@ export default function App() {
   const [micOn, setMicOn] = useState(true)
   const [camOn, setCamOn] = useState(true)
   const [sharing, setSharing] = useState(false)
+  const [pendingShare, setPendingShare] = useState(false)
 
   const [connState, setConnState] = useState<RTCPeerConnectionState>('new')
   const [socketConnected, setSocketConnected] = useState(false)
@@ -71,12 +72,10 @@ export default function App() {
     return p ? p.displayName : 'Partner'
   }, [roomState, user?.userId])
 
-  // Apply dark theme
   useEffect(() => {
     document.documentElement.classList.add('dark')
   }, [])
 
-  // Simple auth bootstrap
   useEffect(() => {
     if (token && user) setView('lobby')
   }, [token, user])
@@ -93,7 +92,6 @@ export default function App() {
     roomPasswordRef.current = roomPassword
   }, [roomPassword])
 
-  // Call timer
   useEffect(() => {
     if (!callStartMs) return
     setCallSeconds(Math.floor((Date.now() - callStartMs) / 1000))
@@ -149,7 +147,6 @@ export default function App() {
   async function ensureLocalMedia() {
     if (localStream) return localStream
 
-    // HD-ish constraints (browser will adapt)
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
       video: { width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -159,7 +156,6 @@ export default function App() {
   }
 
   function createOrResetPeerConnection(params: { roomId: string; toSocketId: string }) {
-    // Tear down old connection if any.
     pcRef.current?.close()
     pcRef.current = null
     setConnState('new')
@@ -192,7 +188,6 @@ export default function App() {
 
     s.on('connect', () => {
       setSocketConnected(true)
-      // Auto-reconnect: if we were in a room, re-join.
       const rid = roomIdRef.current
       if (viewRef.current === 'call' && rid) {
         s.emit('join-room', { roomId: rid, password: roomPasswordRef.current }, (r) => {
@@ -204,7 +199,6 @@ export default function App() {
 
     s.on('room-state', ({ room }) => {
       setRoomState(room)
-      // Server provides startedAt when 2 participants present.
       if (room.startedAt && !callStartMs) {
         const ms = new Date(room.startedAt).getTime()
         if (!Number.isNaN(ms)) setCallStartMs(ms)
@@ -212,7 +206,6 @@ export default function App() {
     })
 
     s.on('ready-for-offer', async ({ roomId: rid, to }) => {
-      // We are the initiator.
       const pc = createOrResetPeerConnection({ roomId: rid, toSocketId: to })
       const stream = await ensureLocalMedia()
       addLocalTracks(pc, stream)
@@ -223,7 +216,6 @@ export default function App() {
     })
 
     s.on('webrtc-offer', async ({ from, sdp, roomId: rid }) => {
-      // We are the answerer.
       const pc = createOrResetPeerConnection({ roomId: rid, toSocketId: from })
       const stream = await ensureLocalMedia()
       addLocalTracks(pc, stream)
@@ -235,7 +227,6 @@ export default function App() {
     })
 
     s.on('webrtc-answer', async ({ from, sdp }) => {
-      // Initiator receives answer.
       if (remoteSocketIdRef.current && remoteSocketIdRef.current !== from) return
       if (!pcRef.current) return
       await safeSetRemoteDescription(pcRef.current, sdp)
@@ -247,7 +238,6 @@ export default function App() {
       try {
         await pcRef.current.addIceCandidate(candidate)
       } catch {
-        // Ignore ICE errors during reconnect/teardown.
       }
     })
 
@@ -266,8 +256,6 @@ export default function App() {
     })
 
     s.on('renegotiate', async () => {
-      // Simplest reconnection strategy: rebuild PC and have initiator send a fresh offer.
-      // Server will emit ready-for-offer to the first participant when the other rejoins.
       setRemoteStream(null)
       pcRef.current?.close()
       pcRef.current = null
@@ -294,7 +282,6 @@ export default function App() {
         }
         setRoomId(r.roomId)
 
-        // Join is implicit for creator (server joins you). Now get local media and go to call view.
         await ensureLocalMedia().catch((e) => setError(e?.message || 'Camera/mic permission denied'))
         setView('call')
         resolve()
@@ -329,9 +316,7 @@ export default function App() {
     setConnState('new')
 
     setSharing(false)
-
-    // Stop screen share track if active
-    // (We keep camera stream alive for a snappy experience.)
+    setPendingShare(false)
   }
 
   async function endCall() {
@@ -358,7 +343,13 @@ export default function App() {
   }
 
   async function startScreenShare() {
-    if (!pcRef.current) return setError('Not connected yet')
+    if (!pcRef.current || connState !== 'connected') {
+      setPendingShare(true)
+      setError('Waiting for connection...')
+      return
+    }
+    setPendingShare(false)
+    setError(null)
     const pc = pcRef.current
 
     try {
@@ -366,7 +357,6 @@ export default function App() {
       const track = display.getVideoTracks()[0]
       if (!track) return
 
-      // Replace outgoing video track.
       const sender = pc.getSenders().find((s) => s.track?.kind === 'video')
       await sender?.replaceTrack(track)
       setSharing(true)
@@ -387,7 +377,14 @@ export default function App() {
     const sender = pc.getSenders().find((s) => s.track?.kind === 'video')
     if (camTrack) await sender?.replaceTrack(camTrack)
     setSharing(false)
+    setPendingShare(false)
   }
+
+  useEffect(() => {
+    if (!pendingShare) return
+    if (connState !== 'connected' || !pcRef.current) return
+    startScreenShare()
+  }, [pendingShare, connState])
 
   function sendChat(text: string) {
     if (!socketRef.current || !roomId) return
@@ -397,7 +394,6 @@ export default function App() {
   const typingDebounceRef = useRef<any>(null)
   function sendTyping(isTyping: boolean) {
     if (!socketRef.current || !roomId) return
-    // Throttle typing events.
     if (typingDebounceRef.current) return
     socketRef.current.emit('chat-typing', { roomId, isTyping })
     typingDebounceRef.current = setTimeout(() => (typingDebounceRef.current = null), 700)
@@ -441,7 +437,6 @@ export default function App() {
 
   return (
     <div className="relative min-h-dvh bg-[rgb(var(--bg-deep))] overflow-hidden">
-      {/* Ambient gradient backdrop */}
       <div className="ambient-gradient" />
 
       <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
@@ -462,7 +457,6 @@ export default function App() {
 
         {view === 'lobby' && user && (
           <div className="grid gap-6 md:grid-cols-2 animate-fade-in-scale">
-            {/* Create Room */}
             <div className="glass-panel p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-10 w-10 rounded-full bg-[rgb(var(--rose-gold))]/10 flex items-center justify-center">
@@ -507,7 +501,6 @@ export default function App() {
               )}
             </div>
 
-            {/* Join Room */}
             <div className="glass-panel p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="h-10 w-10 rounded-full bg-[rgb(var(--champagne))]/10 flex items-center justify-center">
@@ -555,7 +548,6 @@ export default function App() {
         {view === 'call' && user && (
           <div className="relative grid gap-6 lg:grid-cols-[1fr_340px] animate-fade-in-scale">
             <div className="flex flex-col gap-6">
-              {/* Room info */}
               <div className="glass-panel flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-4">
                   <img src="/logo.png" alt="" className="h-8 w-8 rounded-lg" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
@@ -570,13 +562,11 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Video tiles */}
               <div className="grid gap-4 md:grid-cols-2">
                 <VideoTile stream={localStream} label={meLabel} muted isLocal />
                 <VideoTile stream={remoteStream} label={otherLabel} />
               </div>
 
-              {/* Shared Presence Orb */}
               {socketRef.current && (
                 <SharedPresenceOrb
                   socket={socketRef.current}
@@ -587,7 +577,6 @@ export default function App() {
                 />
               )}
 
-              {/* Controls */}
               <div className="glass-panel flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-3">
                   <button
@@ -673,7 +662,6 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
 
   return (
     <div className="grid gap-6 md:grid-cols-2 animate-fade-in-scale">
-      {/* Welcome panel */}
       <div className="glass-panel p-8">
         <img src="/logo.png" alt="DuoMeet" className="h-14 w-14 rounded-xl mb-6" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
 
@@ -700,7 +688,6 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
         </div>
       </div>
 
-      {/* Auth form */}
       <div className="glass-panel p-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-serif text-xl font-medium text-[rgb(var(--champagne))]">

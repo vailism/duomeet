@@ -1,7 +1,5 @@
 import jwt from 'jsonwebtoken'
 import { config } from '../config.js'
-
-// Express middleware: verifies Bearer token and attaches req.user
 export function requireAuth(req, res, next) {
   const header = req.headers.authorization
   const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : null
