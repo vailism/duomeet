@@ -1,18 +1,21 @@
 # DuoMeet (Private Couple Video App)
 
-A private 1-to-1 WebRTC video calling app (Google Meet vibes, but only for two).
+A private 1-to-1 WebRTC video calling app designed for couples — cinematic, minimal, and intimate.
 
 ## Features
 - 1-to-1 HD video calling (WebRTC)
-- Mute / unmute, camera on / off, screen share
+- Mute/unmute, camera on/off, screen share
 - Real-time text chat + typing indicator
 - Room create + join with code, optional password
 - Only two users allowed per room
 - Connection status + auto-reconnect
 - Call timer
-- Dark mode + **Arya Mode** (romantic gradient + subtle hearts)
-- Small floating heart burst when call connects
+- **Quiet Luxury** UI: deep charcoal base with champagne + rose-gold accents
+- **Shared Presence Orb**: audio-reactive glow + click-to-send ripples and whisper messages
 - Optional background music toggle (Web Audio; no external assets)
+
+### Shared Presence Orb
+During a call, the orb reflects combined voice activity (local + remote). Click/tap it to send a synchronized “touch” ripple to your partner, plus a small floating whisper message.
 
 ## Project structure
 - `client/` React + Vite frontend
@@ -48,7 +51,7 @@ npm run dev
 3. In window A: set optional room password → click **Create room**
 4. Copy the room code, send to your partner
 5. In window B: paste room code (and password if set) → click **Join room**
-6. The call should connect and show a small heart burst
+6. The call should connect — try clicking the Shared Presence Orb
 
 If you see "Room is full (2 max)", a third participant tried joining (this is expected).
 
