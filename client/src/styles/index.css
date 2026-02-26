@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 255 255 255;
+  --fg: 17 24 39;
+  --card: 255 255 255;
+  --muted: 107 114 128;
+  --border: 229 231 235;
+
+  --grad-a: 99 102 241; /* indigo */
+  --grad-b: 236 72 153; /* pink */
+}
+
+.dark {
+  --bg: 3 7 18;
+  --fg: 226 232 240;
+  --card: 15 23 42;
+  --muted: 148 163 184;
+  --border: 51 65 85;
+}
+
+/* Arya Mode: romantic pink-purple gradient */
+.arya {
+  --grad-a: 217 70 239;
+  --grad-b: 236 72 153;
+}
+
+body {
+  color: rgb(var(--fg));
+  background: rgb(var(--bg));
+}
+
+/* Soft blur background panel */
+.glass {
+  background: color-mix(in srgb, rgb(var(--card)) 70%, transparent);
+  border: 1px solid rgb(var(--border));
+  backdrop-filter: blur(14px);
+}
+
+/* Heart float (used for connected burst + subtle background) */
+@keyframes heartFloat {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(-140px) scale(1.15); opacity: 0; }
+}
+
+.heart {
+  position: absolute;
+  animation: heartFloat 1.8s ease-out forwards;
+  will-change: transform, opacity;
+}
