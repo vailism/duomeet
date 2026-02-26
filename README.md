@@ -21,6 +21,19 @@ During a call, the orb reflects combined voice activity (local + remote). Click/
 - `client/` React + Vite frontend
 - `server/` Node.js + Express + Socket.io backend (signaling + REST APIs)
 
+## Tech used in this build
+- Node.js 18+
+- React 18 + TypeScript 5
+- Vite 5
+- Tailwind CSS 3
+- WebRTC (RTCPeerConnection)
+- Socket.io 4
+- Express 4
+- MongoDB + Mongoose
+- Zod
+- JWT + bcrypt
+- Helmet + express-rate-limit
+
 ## Local setup
 ### 1) Prereqs
 - Node.js 18+ recommended
