@@ -15,6 +15,16 @@ import { setupSockets } from './sockets/index.js'
 async function main() {
   await connectDb()
 
+  const normalizeOrigin = (origin) => String(origin || '').trim().replace(/\/+$/, '')
+  const allowedOrigins = new Set((config.clientOrigins || []).map(normalizeOrigin))
+  const corsOrigin = (origin, cb) => {
+    // Non-browser clients (curl, server-to-server) often omit Origin.
+    if (!origin) return cb(null, true)
+    const normalized = normalizeOrigin(origin)
+    if (allowedOrigins.has(normalized)) return cb(null, origin)
+    return cb(new Error(`CORS blocked for origin: ${origin}`))
+  }
+
   const app = express()
   // `express-rate-limit` rejects `trust proxy: true` because it allows IP spoofing.
   // On platforms like Render, requests come through a single reverse proxy.
@@ -34,7 +44,7 @@ async function main() {
   app.use(helmet())
   app.use(
     cors({
-      origin: config.clientOrigin,
+      origin: corsOrigin,
       credentials: true,
     }),
   )
@@ -62,8 +72,9 @@ async function main() {
 
   const io = new SocketIOServer(server, {
     cors: {
-      origin: config.clientOrigin,
+      origin: corsOrigin,
       methods: ['GET', 'POST'],
+      credentials: true,
     },
   })
 
@@ -73,7 +84,7 @@ async function main() {
     // eslint-disable-next-line no-console
     console.log(`[server] listening on :${config.port}`)
     // eslint-disable-next-line no-console
-    console.log(`[server] client origin: ${config.clientOrigin}`)
+    console.log(`[server] client origin(s): ${(config.clientOrigins || []).join(', ')}`)
   })
 }
 

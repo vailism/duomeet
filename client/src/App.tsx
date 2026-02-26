@@ -427,36 +427,49 @@ export default function App() {
   }
 
   const header = (
-    <div className="glass flex items-center justify-between rounded-2xl px-4 py-3">
+    <div className="glass flex items-center justify-between rounded-2xl px-5 py-3.5 animate-fade-up">
       <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-2xl bg-gradient-to-br from-[rgb(var(--grad-a))] to-[rgb(var(--grad-b))]" />
+        {/* Logo space — drop your logo image in /public/logo.png */}
+        <div className="logo-mark">
+          <img src="/logo.png" alt="DuoMeet" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+        </div>
         <div>
-          <div className="text-sm font-semibold">DuoMeet</div>
-          <div className="text-xs text-slate-500">Private 1-to-1 calling</div>
+          <div className="text-base font-bold tracking-tight grad-text">DuoMeet</div>
+          <div className="text-[0.65rem] font-medium text-[rgb(var(--muted))]">Private 1&#8209;to&#8209;1 calling</div>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Theme toggle */}
         <button
-          className="rounded-xl border border-slate-200/60 bg-white/70 px-3 py-2 text-xs font-semibold backdrop-blur hover:bg-white dark:border-slate-700/60 dark:bg-slate-900/40 dark:hover:bg-slate-900"
+          className="btn-secondary flex items-center gap-1.5"
           onClick={() => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
         >
+          {theme === 'dark' ? (
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
+          ) : (
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg>
+          )}
           {theme === 'dark' ? 'Light' : 'Dark'}
         </button>
+
+        {/* Arya mode toggle */}
         <button
           className={
-            'rounded-xl border px-3 py-2 text-xs font-semibold backdrop-blur ' +
-            (aryaMode
-              ? 'border-pink-300/60 bg-pink-200/40 hover:bg-pink-200/55 dark:border-pink-200/40 dark:bg-pink-900/30'
-              : 'border-slate-200/60 bg-white/70 hover:bg-white dark:border-slate-700/60 dark:bg-slate-900/40')
+            'btn-secondary flex items-center gap-1.5 ' +
+            (aryaMode ? '!border-rose-400/50 !bg-rose-500/10 !text-rose-400' : '')
           }
           onClick={() => setAryaMode((v) => !v)}
         >
-          Arya Mode
+          <span className="text-sm">&#x2764;</span>
+          Arya
         </button>
 
         {user ? (
-          <button className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900" onClick={logout}>
+          <button
+            className="btn-secondary !border-red-400/30 !text-red-400 hover:!bg-red-500/10"
+            onClick={logout}
+          >
             Logout
           </button>
         ) : null}
@@ -467,45 +480,58 @@ export default function App() {
   return (
     <div className="relative min-h-dvh">
       <GradientBackdrop arya={aryaMode} />
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
         {header}
 
-        {error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800/40 dark:bg-red-950/30 dark:text-red-200">{error}</div> : null}
+        {error ? (
+          <div className="animate-fade-up rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-400 backdrop-blur">
+            <div className="flex items-center gap-2">
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+              </svg>
+              {error}
+            </div>
+          </div>
+        ) : null}
 
         {view === 'auth' ? (
           <AuthCard onLogin={login} onRegister={register} />
         ) : null}
 
         {view === 'lobby' && user ? (
-          <div className="grid gap-4">
+          <div className="grid gap-4 stagger">
             <div className="grid gap-4 md:grid-cols-2">
-            <div className="glass rounded-2xl p-5">
-              <div className="text-sm font-semibold">Create a room</div>
-              <div className="mt-2 text-xs text-slate-500">Optional password (for extra privacy).</div>
 
-              <label className="mt-4 block text-xs font-semibold text-slate-600 dark:text-slate-300">Room password (optional)</label>
+            {/* ── Create Room Card ──────────────── */}
+            <div className="glass rounded-2xl p-6 animate-fade-up">
+              <div className="flex items-center gap-2">
+                <svg className="h-5 w-5 text-[rgb(var(--grad-a))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                <div className="text-sm font-bold">Create a room</div>
+              </div>
+              <div className="mt-2 text-xs text-[rgb(var(--muted))]">Start a private call. Share the code with your partner.</div>
+
+              <label className="mt-5 block text-xs font-semibold text-[rgb(var(--muted))]">Room password (optional)</label>
               <input
                 value={roomPassword}
                 onChange={(e) => setRoomPassword(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200/60 bg-white/70 px-3 py-2 text-sm outline-none backdrop-blur focus:border-pink-400 dark:border-slate-700/60 dark:bg-slate-900/40"
+                className="input-field mt-1.5"
                 placeholder="Leave empty for no password"
                 type="password"
               />
 
-              <button
-                className="mt-4 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-                onClick={createRoom}
-              >
+              <button className="btn-accent mt-5 w-full" onClick={createRoom}>
                 Create room
               </button>
 
               {roomId ? (
-                <div className="mt-4 rounded-xl border border-slate-200/60 bg-white/60 p-3 text-sm dark:border-slate-700/60 dark:bg-slate-900/40">
-                  <div className="text-xs text-slate-500">Room code</div>
-                  <div className="mt-1 flex items-center justify-between gap-2">
-                    <div className="font-mono text-base font-semibold">{roomId}</div>
+                <div className="mt-4 rounded-xl border border-[rgb(var(--border))]/40 bg-[rgb(var(--bg))]/30 p-3.5">
+                  <div className="text-[0.65rem] font-semibold uppercase tracking-widest text-[rgb(var(--muted))]">Room code</div>
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <div className="font-mono text-lg font-bold grad-text">{roomId}</div>
                     <button
-                      className="rounded-lg border border-slate-200/70 bg-white/70 px-3 py-2 text-xs font-semibold hover:bg-white dark:border-slate-700/70 dark:bg-slate-900/40"
+                      className="btn-secondary"
                       onClick={async () => {
                         await navigator.clipboard.writeText(roomId)
                       }}
@@ -517,48 +543,63 @@ export default function App() {
               ) : null}
             </div>
 
-            <div className="glass rounded-2xl p-5">
-              <div className="text-sm font-semibold">Join a room</div>
-              <div className="mt-2 text-xs text-slate-500">Paste a room code your partner sent you.</div>
+            {/* ── Join Room Card ────────────────── */}
+            <div className="glass rounded-2xl p-6 animate-fade-up">
+              <div className="flex items-center gap-2">
+                <svg className="h-5 w-5 text-[rgb(var(--grad-b))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                </svg>
+                <div className="text-sm font-bold">Join a room</div>
+              </div>
+              <div className="mt-2 text-xs text-[rgb(var(--muted))]">Paste a room code your partner sent you.</div>
 
-              <label className="mt-4 block text-xs font-semibold text-slate-600 dark:text-slate-300">Room code</label>
+              <label className="mt-5 block text-xs font-semibold text-[rgb(var(--muted))]">Room code</label>
               <input
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200/60 bg-white/70 px-3 py-2 text-sm font-mono outline-none backdrop-blur focus:border-pink-400 dark:border-slate-700/60 dark:bg-slate-900/40"
+                className="input-field mt-1.5 font-mono"
                 placeholder="e.g. 8kF2aPqZxB"
               />
 
-              <label className="mt-4 block text-xs font-semibold text-slate-600 dark:text-slate-300">Room password (if set)</label>
+              <label className="mt-4 block text-xs font-semibold text-[rgb(var(--muted))]">Room password (if set)</label>
               <input
                 value={roomPassword}
                 onChange={(e) => setRoomPassword(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200/60 bg-white/70 px-3 py-2 text-sm outline-none backdrop-blur focus:border-pink-400 dark:border-slate-700/60 dark:bg-slate-900/40"
+                className="input-field mt-1.5"
                 placeholder="Password (optional)"
                 type="password"
               />
 
-              <button
-                className="mt-4 w-full rounded-xl bg-gradient-to-r from-[rgb(var(--grad-a))] to-[rgb(var(--grad-b))] px-4 py-3 text-sm font-semibold text-white hover:opacity-95"
-                onClick={joinRoom}
-              >
-                Join room
+              <button className="btn-primary mt-5 w-full" onClick={joinRoom}>
+                <span>Join room</span>
               </button>
 
-              <div className="mt-4 text-xs text-slate-500">
-                Status: socket {socketConnected ? 'online' : 'offline'} • webrtc {connState}
+              <div className="mt-4 flex items-center gap-3 text-xs">
+                <span className={`chip ${socketConnected ? 'chip-online' : 'chip-offline'}`}>
+                  <span className={`status-dot ${socketConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                  Socket {socketConnected ? 'online' : 'offline'}
+                </span>
+                <span className="chip chip-offline">
+                  WebRTC {connState}
+                </span>
               </div>
             </div>
             </div>
 
-            <div className="glass rounded-2xl p-5">
+            {/* ── Call History Card ─────────────── */}
+            <div className="glass rounded-2xl p-6 animate-fade-up">
               <div className="flex items-center justify-between gap-2">
-                <div>
-                  <div className="text-sm font-semibold">Recent calls</div>
-                  <div className="mt-1 text-xs text-slate-500">Saved to MongoDB (room history)</div>
+                <div className="flex items-center gap-2">
+                  <svg className="h-5 w-5 text-[rgb(var(--muted))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                  <div>
+                    <div className="text-sm font-bold">Recent calls</div>
+                    <div className="mt-0.5 text-[0.65rem] text-[rgb(var(--muted))]">Your call history</div>
+                  </div>
                 </div>
                 <button
-                  className="rounded-xl border border-slate-200/60 bg-white/70 px-3 py-2 text-xs font-semibold backdrop-blur hover:bg-white dark:border-slate-700/60 dark:bg-slate-900/40"
+                  className="btn-secondary"
                   onClick={loadHistory}
                   disabled={historyLoading}
                 >
@@ -568,16 +609,18 @@ export default function App() {
 
               <div className="mt-4 grid gap-2 text-sm">
                 {historyItems.length === 0 ? (
-                  <div className="text-slate-500">No history yet.</div>
+                  <div className="rounded-xl border border-[rgb(var(--border))]/30 bg-[rgb(var(--bg))]/20 p-4 text-center text-xs text-[rgb(var(--muted))]">
+                    No history yet — start your first call!
+                  </div>
                 ) : (
                   historyItems.map((it) => (
-                    <div key={it._id} className="rounded-xl border border-slate-200/60 bg-white/60 px-3 py-2 dark:border-slate-700/60 dark:bg-slate-900/40">
+                    <div key={it._id} className="rounded-xl border border-[rgb(var(--border))]/30 bg-[rgb(var(--bg))]/20 px-4 py-3 transition-colors hover:bg-[rgb(var(--card-hover))]/40">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="font-mono text-xs text-slate-500">{it.roomId}</div>
-                        <div className="text-xs text-slate-500">{fmtTime(Number(it.durationSec || 0))}</div>
+                        <div className="font-mono text-xs text-[rgb(var(--muted))]">{it.roomId}</div>
+                        <div className="chip chip-online">{fmtTime(Number(it.durationSec || 0))}</div>
                       </div>
-                      <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                        {(it.participants || []).map((p: any) => p.displayName).join(' • ')}
+                      <div className="mt-1.5 text-xs font-medium">
+                        {(it.participants || []).map((p: any) => p.displayName).join(' &bull; ')}
                       </div>
                     </div>
                   ))
@@ -588,80 +631,100 @@ export default function App() {
         ) : null}
 
         {view === 'call' && user ? (
-          <div className="relative grid gap-4 lg:grid-cols-[1fr_360px]">
+          <div className="relative grid gap-4 lg:grid-cols-[1fr_360px] animate-fade-up">
             <AryaBackgroundHearts enabled={aryaMode} />
             <HeartsBurst active={heartBurst} />
 
             <div className="flex flex-col gap-4">
-              <div className="glass rounded-2xl p-4">
+              {/* Room info bar */}
+              <div className="glass rounded-2xl px-5 py-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-semibold">Room</div>
-                    <div className="font-mono text-xs text-slate-500">{roomId}</div>
+                  <div className="flex items-center gap-3">
+                    <div className="logo-mark h-8 w-8 rounded-lg">
+                      <img src="/logo.png" alt="" className="h-full w-full" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-widest text-[rgb(var(--muted))]">Room</div>
+                      <div className="font-mono text-sm font-bold grad-text">{roomId}</div>
+                    </div>
                   </div>
-                  <div className="text-xs text-slate-500">
-                    socket {socketConnected ? 'online' : 'offline'} • webrtc {connState} • timer {fmtTime(callSeconds)}
+                  <div className="flex items-center gap-2">
+                    <span className={`chip ${socketConnected ? 'chip-online' : 'chip-offline'}`}>
+                      <span className={`status-dot ${socketConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                      {socketConnected ? 'Connected' : 'Offline'}
+                    </span>
+                    <span className="chip chip-online font-mono">{fmtTime(callSeconds)}</span>
                   </div>
                 </div>
               </div>
 
+              {/* Video tiles */}
               <div className="grid gap-4 md:grid-cols-2">
-                <VideoTile stream={localStream} label={meLabel} muted />
-                <VideoTile stream={remoteStream} label={otherLabel} />
+                <VideoTile stream={localStream} label={meLabel} muted connected={connState === 'connected'} />
+                <VideoTile stream={remoteStream} label={otherLabel} connected={connState === 'connected'} />
               </div>
 
-              <div className="glass flex flex-wrap items-center justify-between gap-2 rounded-2xl p-4">
+              {/* Controls bar */}
+              <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-2xl px-5 py-3.5">
                 <div className="flex flex-wrap gap-2">
                   <button
                     className={
-                      'rounded-xl px-4 py-2 text-sm font-semibold transition ' +
-                      (micOn
-                        ? 'bg-white/70 hover:bg-white dark:bg-slate-900/40 dark:hover:bg-slate-900'
-                        : 'bg-red-600 text-white hover:bg-red-500')
+                      'btn-secondary flex items-center gap-1.5 ' +
+                      (!micOn ? '!border-red-400/40 !bg-red-500/15 !text-red-400' : '')
                     }
                     onClick={toggleMic}
                   >
+                    {micOn ? (
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" /></svg>
+                    ) : (
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m18.364 18.364-3.067-3.067M3.75 7.5l.693-.694a2.25 2.25 0 0 1 3.182 0l.396.396M12 18.75a6 6 0 0 0 5.574-3.787M3.75 7.5V12a6 6 0 0 0 6 6m0 0v3.75m-3.75 0h7.5m1.125-16.5a3 3 0 0 1 3 3V12m-1.5-4.5L3 21" /></svg>
+                    )}
                     {micOn ? 'Mute' : 'Unmute'}
                   </button>
 
                   <button
                     className={
-                      'rounded-xl px-4 py-2 text-sm font-semibold transition ' +
-                      (camOn
-                        ? 'bg-white/70 hover:bg-white dark:bg-slate-900/40 dark:hover:bg-slate-900'
-                        : 'bg-red-600 text-white hover:bg-red-500')
+                      'btn-secondary flex items-center gap-1.5 ' +
+                      (!camOn ? '!border-red-400/40 !bg-red-500/15 !text-red-400' : '')
                     }
                     onClick={toggleCam}
                   >
-                    {camOn ? 'Camera off' : 'Camera on'}
+                    {camOn ? (
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+                    ) : (
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M12 18.75H4.5a2.25 2.25 0 0 1-2.25-2.25V9m12.841 9.091L16.5 19.5m-1.409-.409 1.409.409M3 3l1.5 1.5m0 0 14.25 14.25" /></svg>
+                    )}
+                    {camOn ? 'Cam off' : 'Cam on'}
                   </button>
 
                   <button
                     className={
-                      'rounded-xl px-4 py-2 text-sm font-semibold transition ' +
-                      (sharing
-                        ? 'bg-pink-600 text-white hover:bg-pink-500'
-                        : 'bg-white/70 hover:bg-white dark:bg-slate-900/40 dark:hover:bg-slate-900')
+                      'btn-secondary flex items-center gap-1.5 ' +
+                      (sharing ? '!border-violet-400/40 !bg-violet-500/15 !text-violet-400' : '')
                     }
                     onClick={() => (sharing ? stopScreenShare() : startScreenShare())}
                   >
-                    {sharing ? 'Stop share' : 'Share screen'}
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25A2.25 2.25 0 0 1 5.25 3h13.5A2.25 2.25 0 0 1 21 5.25Z" /></svg>
+                    {sharing ? 'Stop share' : 'Share'}
                   </button>
 
                   <button
                     className={
-                      'rounded-xl px-4 py-2 text-sm font-semibold transition ' +
-                      (musicOn
-                        ? 'bg-pink-600 text-white hover:bg-pink-500'
-                        : 'bg-white/70 hover:bg-white dark:bg-slate-900/40 dark:hover:bg-slate-900')
+                      'btn-secondary flex items-center gap-1.5 ' +
+                      (musicOn ? '!border-amber-400/40 !bg-amber-500/15 !text-amber-400' : '')
                     }
                     onClick={() => toggleMusic().catch(() => setError('Audio blocked by browser — click again'))}
                   >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m9 9 10.5-3m0 6.553v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 1 1-.99-3.467l2.31-.66a2.25 2.25 0 0 0 1.632-2.163Zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 0 1-1.632 2.163l-1.32.377a1.803 1.803 0 0 1-.99-3.467l2.31-.66A2.25 2.25 0 0 0 9 15.553Z" /></svg>
                     {musicOn ? 'Music on' : 'Music off'}
                   </button>
                 </div>
 
-                <button className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500" onClick={endCall}>
+                <button
+                  className="flex items-center gap-1.5 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-500/25 transition-all hover:bg-red-400 hover:shadow-red-500/40"
+                  onClick={endCall}
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 3.75 18 6m0 0 2.25 2.25M18 6l2.25-2.25M18 6l-2.25 2.25m1.5 13.5c-8.284 0-15-6.716-15-15V4.5A2.25 2.25 0 0 1 4.5 2.25h1.372c.516 0 .966.351 1.091.852l1.106 4.423c.11.44-.054.902-.417 1.173l-1.293.97a1.062 1.062 0 0 0-.38 1.21 12.035 12.035 0 0 0 7.143 7.143c.441.162.928-.004 1.21-.38l.97-1.293a1.125 1.125 0 0 1 1.173-.417l4.423 1.106c.5.125.852.575.852 1.091V19.5a2.25 2.25 0 0 1-2.25 2.25h-2.25Z" /></svg>
                   End call
                 </button>
               </div>
@@ -679,8 +742,8 @@ export default function App() {
           </div>
         ) : null}
 
-        <footer className="pt-2 text-center text-xs text-slate-500">
-          DuoMeet • WebRTC + Socket.io • STUN: Google public
+        <footer className="py-4 text-center text-[0.65rem] font-medium text-[rgb(var(--muted))]/60">
+          DuoMeet &mdash; WebRTC &bull; Socket.io &bull; STUN: Google public
         </footer>
       </div>
     </div>
@@ -698,22 +761,45 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
   const [localErr, setLocalErr] = useState<string | null>(null)
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <div className="glass rounded-2xl p-6">
-        <div className="text-sm font-semibold">Welcome to DuoMeet</div>
-        <div className="mt-2 text-sm text-slate-600 dark:text-slate-300">
-          A private 1-to-1 video call space for two.
+    <div className="grid gap-4 md:grid-cols-2 stagger">
+      {/* Welcome panel */}
+      <div className="glass rounded-2xl p-7 animate-fade-up">
+        <div className="logo-mark mb-5 h-12 w-12 rounded-xl">
+          <img src="/logo.png" alt="DuoMeet" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
         </div>
-        <div className="mt-6 rounded-2xl border border-slate-200/60 bg-white/60 p-4 text-xs text-slate-600 dark:border-slate-700/60 dark:bg-slate-900/40 dark:text-slate-300">
-          Tip: In production you must use HTTPS for camera/mic.
+        <h1 className="text-2xl font-extrabold tracking-tight">
+          Welcome to <span className="grad-text">DuoMeet</span>
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-[rgb(var(--muted))]">
+          A private 1&#8209;to&#8209;1 video call space designed for two. Crystal clear audio, real&#8209;time chat, and a cozy atmosphere — all in your browser.
+        </p>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-400">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            End-to-end WebRTC
+          </div>
+          <div className="flex items-center gap-2 rounded-full bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-400">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            Screen sharing
+          </div>
+          <div className="flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400">
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            Built-in chat
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-xl border border-[rgb(var(--border))]/30 bg-[rgb(var(--bg))]/20 p-4 text-xs text-[rgb(var(--muted))]">
+          <strong className="font-bold text-[rgb(var(--fg))]">Tip:</strong> In production, HTTPS is required for camera/mic access.
         </div>
       </div>
 
-      <div className="glass rounded-2xl p-6">
+      {/* Auth form */}
+      <div className="glass rounded-2xl p-7 animate-fade-up">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-semibold">{mode === 'login' ? 'Login' : 'Create account'}</div>
+          <div className="text-lg font-bold">{mode === 'login' ? 'Sign in' : 'Create account'}</div>
           <button
-            className="text-xs font-semibold text-pink-600 hover:underline dark:text-pink-300"
+            className="text-xs font-bold grad-text hover:opacity-80"
             onClick={() => {
               setLocalErr(null)
               setMode((m) => (m === 'login' ? 'register' : 'login'))
@@ -723,10 +809,14 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
           </button>
         </div>
 
-        {localErr ? <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800/40 dark:bg-red-950/30 dark:text-red-200">{localErr}</div> : null}
+        {localErr ? (
+          <div className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400">
+            {localErr}
+          </div>
+        ) : null}
 
         <form
-          className="mt-4 flex flex-col gap-3"
+          className="mt-5 flex flex-col gap-4"
           onSubmit={async (e) => {
             e.preventDefault()
             setLocalErr(null)
@@ -747,33 +837,33 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
         >
           {mode === 'register' ? (
             <div>
-              <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Display name</label>
+              <label className="block text-xs font-semibold text-[rgb(var(--muted))]">Display name</label>
               <input
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-200/60 bg-white/70 px-3 py-2 text-sm outline-none backdrop-blur focus:border-pink-400 dark:border-slate-700/60 dark:bg-slate-900/40"
+                className="input-field mt-1.5"
                 placeholder="e.g. Arya"
               />
             </div>
           ) : null}
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Email</label>
+            <label className="block text-xs font-semibold text-[rgb(var(--muted))]">Email</label>
             <input
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200/60 bg-white/70 px-3 py-2 text-sm outline-none backdrop-blur focus:border-pink-400 dark:border-slate-700/60 dark:bg-slate-900/40"
+              className="input-field mt-1.5"
               placeholder="you@example.com"
               type="email"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-300">Password</label>
+            <label className="block text-xs font-semibold text-[rgb(var(--muted))]">Password</label>
             <input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200/60 bg-white/70 px-3 py-2 text-sm outline-none backdrop-blur focus:border-pink-400 dark:border-slate-700/60 dark:bg-slate-900/40"
+              className="input-field mt-1.5"
               placeholder="At least 8 characters"
               type="password"
             />
@@ -781,9 +871,9 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
 
           <button
             disabled={busy}
-            className="mt-2 w-full rounded-xl bg-gradient-to-r from-[rgb(var(--grad-a))] to-[rgb(var(--grad-b))] px-4 py-3 text-sm font-semibold text-white hover:opacity-95 disabled:opacity-60"
+            className="btn-primary mt-2 w-full disabled:opacity-50"
           >
-            {busy ? 'Please wait…' : mode === 'login' ? 'Login' : 'Register'}
+            <span>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}</span>
           </button>
         </form>
       </div>
