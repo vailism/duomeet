@@ -51,6 +51,9 @@ async function main() {
   )
 
   app.get('/health', (_req, res) => res.json({ ok: true }))
+  app.get('/', (_req, res) => {
+    res.type('text/plain').send('DuoMeet server is running. Try /health')
+  })
 
   app.use('/api/auth', authRouter)
   app.use('/api/rooms', roomsRouter)
