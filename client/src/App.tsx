@@ -76,6 +76,19 @@ export default function App() {
     return p ? p.displayName : 'Partner'
   }, [roomState, user?.userId])
 
+  function handleGlowMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    e.currentTarget.style.setProperty('--mx', `${x}px`)
+    e.currentTarget.style.setProperty('--my', `${y}px`)
+  }
+
+  function handleGlowLeave(e: React.MouseEvent<HTMLDivElement>) {
+    e.currentTarget.style.setProperty('--mx', '50%')
+    e.currentTarget.style.setProperty('--my', '20%')
+  }
+
   // Apply theme classes on <html>
   useEffect(() => {
     const root = document.documentElement
@@ -478,7 +491,7 @@ export default function App() {
   )
 
   return (
-    <div className="relative min-h-dvh">
+    <div className="relative min-h-dvh glow-surface" onMouseMove={handleGlowMove} onMouseLeave={handleGlowLeave}>
       <GradientBackdrop arya={aryaMode} />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 md:p-6">
         {header}
@@ -503,7 +516,7 @@ export default function App() {
             <div className="grid gap-4 md:grid-cols-2">
 
             {/* ── Create Room Card ──────────────── */}
-            <div className="glass rounded-2xl p-6 animate-fade-up">
+            <div className="glass hover-lift interactive-card rounded-2xl p-6 animate-fade-up">
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-[rgb(var(--grad-a))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -544,7 +557,7 @@ export default function App() {
             </div>
 
             {/* ── Join Room Card ────────────────── */}
-            <div className="glass rounded-2xl p-6 animate-fade-up">
+            <div className="glass hover-lift interactive-card rounded-2xl p-6 animate-fade-up">
               <div className="flex items-center gap-2">
                 <svg className="h-5 w-5 text-[rgb(var(--grad-b))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
@@ -575,19 +588,22 @@ export default function App() {
               </button>
 
               <div className="mt-4 flex items-center gap-3 text-xs">
-                <span className={`chip ${socketConnected ? 'chip-online' : 'chip-offline'}`}>
+                <span
+                  className={`chip tooltip ${socketConnected ? 'chip-online' : 'chip-offline'}`}
+                  data-tip="Socket.io connection to the server"
+                >
                   <span className={`status-dot ${socketConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
                   Socket {socketConnected ? 'online' : 'offline'}
                 </span>
-                <span className="chip chip-offline">
-                  WebRTC {connState}
+                <span className="chip chip-offline tooltip" data-tip="WebRTC peer connection status">
+                  WebRTC {connState === 'new' ? 'waiting' : connState}
                 </span>
               </div>
             </div>
             </div>
 
             {/* ── Call History Card ─────────────── */}
-            <div className="glass rounded-2xl p-6 animate-fade-up">
+            <div className="glass hover-lift interactive-card rounded-2xl p-6 animate-fade-up">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <svg className="h-5 w-5 text-[rgb(var(--muted))]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -637,7 +653,7 @@ export default function App() {
 
             <div className="flex flex-col gap-4">
               {/* Room info bar */}
-              <div className="glass rounded-2xl px-5 py-3.5">
+              <div className="glass hover-lift interactive-card rounded-2xl px-5 py-3.5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="logo-mark h-8 w-8 rounded-lg">
@@ -649,7 +665,10 @@ export default function App() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`chip ${socketConnected ? 'chip-online' : 'chip-offline'}`}>
+                    <span
+                      className={`chip tooltip ${socketConnected ? 'chip-online' : 'chip-offline'}`}
+                      data-tip="Socket.io connection to the server"
+                    >
                       <span className={`status-dot ${socketConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
                       {socketConnected ? 'Connected' : 'Offline'}
                     </span>
@@ -763,7 +782,7 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
   return (
     <div className="grid gap-4 md:grid-cols-2 stagger">
       {/* Welcome panel */}
-      <div className="glass rounded-2xl p-7 animate-fade-up">
+      <div className="glass hover-lift interactive-card rounded-2xl p-7 animate-fade-up">
         <div className="logo-mark mb-5 h-12 w-12 rounded-xl">
           <img src="/logo.png" alt="DuoMeet" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
         </div>
@@ -795,7 +814,7 @@ function AuthCard(props: { onLogin: (email: string, password: string) => Promise
       </div>
 
       {/* Auth form */}
-      <div className="glass rounded-2xl p-7 animate-fade-up">
+      <div className="glass hover-lift interactive-card rounded-2xl p-7 animate-fade-up">
         <div className="flex items-center justify-between">
           <div className="text-lg font-bold">{mode === 'login' ? 'Sign in' : 'Create account'}</div>
           <button

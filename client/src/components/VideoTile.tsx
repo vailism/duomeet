@@ -18,7 +18,7 @@ export function VideoTile({ stream, label, muted, connected }: Props) {
   return (
     <div
       className={
-        'group relative aspect-video w-full overflow-hidden rounded-2xl border bg-slate-950/20 transition-all duration-300 ' +
+        'group hover-lift interactive-card relative aspect-video w-full overflow-hidden rounded-2xl border bg-slate-950/20 transition-all duration-300 ' +
         (connected
           ? 'glow-connected border-[rgb(var(--grad-a))]/40'
           : 'border-[rgb(var(--border))]/40')

@@ -70,6 +70,26 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Cursor glow surface ───────────────────── */
+.glow-surface {
+  position: relative;
+}
+
+.glow-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    400px circle at var(--mx, 50%) var(--my, 20%),
+    color-mix(in srgb, rgb(var(--grad-a)) 15%, transparent),
+    transparent 60%
+  );
+  opacity: 0.6;
+  transition: opacity 300ms ease;
+  z-index: 0;
+}
+
 /* ── Glassmorphism Card ─────────────────────── */
 .glass {
   background: color-mix(in srgb, rgb(var(--card)) 72%, transparent);
@@ -86,6 +106,43 @@ body {
     0 2px 4px rgba(0,0,0,0.06),
     0 8px 24px rgba(0,0,0,0.08),
     inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+/* ── Hover lift ────────────────────────────── */
+.hover-lift {
+  transform: translateY(0);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* ── Interactive card sheen ────────────────── */
+.interactive-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.interactive-card::after {
+  content: '';
+  position: absolute;
+  inset: -40% 0 auto 0;
+  height: 180%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    color-mix(in srgb, rgb(var(--grad-a)) 14%, transparent) 45%,
+    color-mix(in srgb, rgb(var(--grad-b)) 18%, transparent) 55%,
+    transparent 100%
+  );
+  transform: translateX(-120%);
+  transition: transform 900ms ease;
+  pointer-events: none;
+}
+
+.interactive-card:hover::after {
+  transform: translateX(120%);
 }
 
 /* ── Gradient Utilities ─────────────────────── */
@@ -136,11 +193,30 @@ body {
   transition: opacity 300ms;
 }
 
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120px circle at 20% 20%, rgba(255,255,255,0.35), transparent 60%);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
 .btn-primary:hover::before {
   opacity: 1;
 }
 
+.btn-primary:hover::after {
+  opacity: 1;
+}
+
 .btn-primary > * { position: relative; z-index: 1; }
+
+.btn-primary:active,
+.btn-secondary:active,
+.btn-accent:active {
+  transform: translateY(1px) scale(0.99);
+}
 
 /* ── Secondary Button ───────────────────────── */
 .btn-secondary {
@@ -219,6 +295,40 @@ body {
 .chip-offline {
   background: color-mix(in srgb, rgb(var(--danger)) 15%, transparent);
   color: rgb(var(--danger));
+}
+
+/* ── Tooltip ───────────────────────────────── */
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translate(-50%, 4px);
+  background: color-mix(in srgb, rgb(var(--card)) 85%, transparent);
+  color: rgb(var(--fg));
+  border: 1px solid color-mix(in srgb, rgb(var(--border)) 60%, transparent);
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.65rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  transition: opacity 180ms ease, transform 180ms ease;
+  z-index: 20;
+}
+
+.tooltip:hover::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (hover: none) {
+  .tooltip::after { display: none; }
 }
 
 /* ── Logo container ─────────────────────────── */
